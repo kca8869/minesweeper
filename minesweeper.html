@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Minesweeper</title>
+	<style type="text/css">
+		canvas{
+			background-color: #eee;
+			margin:0 auto;
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<canvas height="400" width="400"></canvas>
+<script type="text/javascript">
+	var canvas=document.querySelector("canvas");
+	var ctx=canvas.getContext("2d");
+	//canvas.setAttribute("height",400);
+	var cols=10;
+	var rows=10;
+	var cellSize=40;
+	var gameOver=false;
+	var howManyMines=0.2;
+
+	function Cell(x,y,size){
+		this.x=x;
+		this.y=y;
+		this.revealed=false;
+		this.size=size;
+		this.mine=false;
+		this.c=0;
+		this.r=0;
+		this.adjacentMines=0;
+		this.hasFlag=false;
+	}
+
+	Cell.prototype.draw = function() {
+		ctx.beginPath();
+				ctx.strokeStyle="black";
+				ctx.strokeRect(this.x,this.y,this.size,this.size);
+				ctx.stroke();
+				
+	};
+
+	Cell.prototype.reveal = function() {
+		this.revealed=true;
+		if (this.mine) {
+					ctx.beginPath();
+					ctx.fillStyle="#aaa"
+					ctx.arc(this.x+(cellSize/2),this.y+(cellSize/2),cellSize/4,0,Math.PI*2);
+					ctx.fill();
+					ctx.stroke();
+				} else if (this.adjacentMines==0){
+					ctx.beginPath();
+		ctx.fillStyle="#aaa"
+		ctx.fillRect(this.x,this.y,this.size,this.size)
+		ctx.fill();
+		ctx.strokeStyle="black";
+		ctx.strokeRect(this.x,this.y,this.size,this.size)
+		ctx.stroke();
+		this.floodFill();
+				}
+				else{
+		ctx.beginPath();
+		ctx.fillStyle="#aaa"
+		ctx.fillRect(this.x,this.y,this.size,this.size)
+		ctx.fill();
+		ctx.strokeStyle="black";
+		ctx.strokeRect(this.x,this.y,this.size,this.size)
+		//ctx.stroke();
+		//ctx.strokeStyle="black";
+		ctx.strokeText(this.adjacentMines,this.x+cellSize/2,this.y+cellSize/2)
+		ctx.stroke();
+	}
+
+	};
+	Cell.prototype.positon=function(x,y){
+		return(this.x<x&&this.x+cellSize>x&&this.y<y&&this.y+cellSize>y)
+	}
+	Cell.prototype.countAdjacentMines=function(){
+		var mineCount=0;
+		if (this.mine) {
+			//mineCount=-1;
+		}else{
+
+		for (var c = -1; c <=1 ; c++) {
+			for (var r = -1; r<=1; r++) {
+				//c=this.c+c;
+				//r=this.r+r;
+				if (this.c+c>-1&&(this.c+c)<cols&&this.r+r>-1&&(this.r+r)<rows) {
+					//console.log(c,r);
+				var adjacentCell=grid[this.c+c][this.r+r];
+				//console.log(adjacentCell);
+				if (adjacentCell.mine) {
+					//console.log(mineCount);
+					mineCount++;
+				}
+			}
+			}
+			
+		}
+	}
+		this.adjacentMines=mineCount;
+	}
+
+	Cell.prototype.floodFill=function(){
+		for (var c = -1; c <=1 ; c++) {
+			for (var r = -1; r<=1; r++) {
+				//c=this.c+c;
+				//r=this.r+r;
+				if (this.c+c>-1&&(this.c+c)<cols&&this.r+r>-1&&(this.r+r)<rows) {
+					//console.log(c,r);
+				var adjacentCell=grid[this.c+c][this.r+r];
+				//console.log(adjacentCell);
+				if (adjacentCell.mine==false&&adjacentCell.revealed==false) {
+					//if (adjacentCell.adjacentMines==0) {
+						//adjacentCell.floodFill();
+					//}
+				adjacentCell.reveal();
+					//console.log(adjacentCell);
+					
+			}
+			
+	}
+}
+}
+}
+Cell.prototype.drawFlag=function(){
+	this.hasFlag=true;
+	ctx.beginPath();
+	ctx.strokeStyle="black"
+	ctx.strokeText("X",this.x+cellSize/2,this.y+cellSize/2)
+	ctx.stroke();
+}
+Cell.prototype.removeFlag=function(){
+	this.hasFlag=false;
+	ctx.beginPath();
+	ctx.clearRect(this.x,this.y,this.size,this.size)
+	ctx.strokeStyle="black"
+	ctx.strokeRect(this.x,this.y,this.size,this.size)
+	ctx.stroke();
+}
+
+
+	function revealAll(){
+		gameOver=true;
+		for (var i = 0; i < grid.length; i++) {
+			for (var j = 0; j < grid[i].length; j++){
+				grid[i][j].reveal();
+
+				//console.log(grid[i][j])
+			}
+			
+		}
+		setTimeout(function(){
+		if(confirm("uh-oh!  You stepped on a mine.  Do you want to play again?")){
+			document.location.reload()
+						}
+					},1000)
+	}
+
+//right click for marking mines
+	canvas.oncontextmenu=function(e){
+		e.preventDefault();
+		for (var i = 0; i < grid.length; i++) {
+			for (var j = 0; j < grid[i].length; j++) {
+		if (grid[i][j].positon(e.offsetX,e.offsetY)) {
+		//console.log(e);
+			if (!grid[i][j].hasFlag) {
+			grid[i][j].drawFlag();
+		} else if (grid[i][j].hasFlag) {
+		grid[i][j].removeFlag();
+	}
+	}
+}
+}
+	}
+
+	canvas.addEventListener("click",function(e){
+		if (gameOver==true) {
+			if(confirm("Do you want to play again?")){
+			document.location.reload()
+						}
+					}
+		var revealedCount=0;
+		for (var i = 0; i < grid.length; i++) {
+			for (var j = 0; j < grid[i].length; j++) {
+				if (grid[i][j].positon(e.offsetX,e.offsetY)) {
+					grid[i][j].reveal();
+					//if (grid[i][j].adjacentMines==0) {
+						//grid[i][j].floodFill();
+					//}
+				
+					if(grid[i][j].mine){
+						revealAll();
+					}
+				}	
+				if (grid[i][j].mine||grid[i][j].revealed) {
+					revealedCount++;
+					console.log(revealedCount);
+					if (revealedCount==cols*rows&&gameOver==false) {
+						setTimeout(function(){
+							if(confirm("Congratulations! You found all of the mines! Do you want to play again?")){
+							document.location.reload()
+						}
+					},1000)
+					}
+				}
+				}
+			}
+			
+			
+		})
+	//make Grid
+	var grid=[];
+	function makeGrid(){
+		for (var c = 0; c< cols; c++) {
+			grid[c]=[];
+			for (var r = 0; r < rows; r++) {
+				grid[c][r]=new Cell(c*cellSize,r*cellSize,cellSize);
+				grid[c][r].c=c;
+				grid[c][r].r=r;
+				if (Math.random()<howManyMines) {
+					grid[c][r].mine=true;
+				}
+				
+			}
+		}
+	}
+	
+
+	function display(){
+		makeGrid();
+		//console.log(grid);
+		for (var i = 0; i < grid.length; i++) {
+			for (var j = 0; j < grid[i].length; j++) {
+				grid[i][j].countAdjacentMines();
+				grid[i][j].draw();
+			}
+			
+		}
+	}
+	display();
+	
+</script>
+</body>
+</html>
